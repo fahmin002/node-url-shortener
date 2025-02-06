@@ -1,11 +1,13 @@
 import express from 'express';
-import path from 'node:path';
+import {dirname, join} from 'node:path';
+import {fileURLToPath} from 'node:url'
+
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import shortid from 'shortid';
 // call dirname to esmodule file
 // CommonJS doesn't need this kind of method, it has global variable named "__dirname" itself
-const __dirname = import.meta.dirname;
+const __dirname = dirname(fileURLToPath(import.meta.url))
 const app = express();
 
 // using a middleware that only parses urlencoded bodies and only looks at requests where the Content-Type header matches the type option
@@ -14,7 +16,7 @@ app.use(express.urlencoded({ extended: false }))
 // set view engine to ejs
 app.set('view engine', 'ejs');
 // to prevent error calling path from windows system, it needs to join full path of view folder and parsed it into unix based path typing
-app.set('views', path.join(__dirname, 'views'))
+app.set('views', join(__dirname, 'views'))
 
 // initialize sqlite db for store information about URL and click count
 const db = await open({
@@ -68,7 +70,7 @@ app.post('/shortUrl', async (req, res) => {
     const shortUrl = shortid.generate();
     await db.run(`INSERT INTO url(full, short, clicks) VALUES (?, ?, ?);`, 
         [fullUrl, shortUrl, 0]
-    );
+    )
     res.redirect('/');
   } catch (error) {
     res.sendStatus(500);
@@ -78,3 +80,5 @@ app.post('/shortUrl', async (req, res) => {
 app.listen(process.env.PORT || 5000, () => {
   console.log('Listening on http://localhost:5000')
 });
+
+export default app;
